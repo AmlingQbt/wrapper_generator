@@ -26,7 +26,7 @@ try:
         "-classpath",
         javahome + "/lib/tools.jar:" + release_base + "/lib/*",
         JAVA_CLASS] + sys.argv[1:]
-    p = subprocess.Popen(cmd)
+    p = subprocess.Popen(cmd, env=dict(os.environ, QBT_WRAPPER_BASE=release_base))
     while(1):
         try:
             p.wait()
