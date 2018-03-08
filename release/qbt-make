@@ -1,0 +1,12 @@
+#!/bin/bash
+
+eval export JAVA_HOME=\$JAVA_${QBT_ENV_JDK}_HOME
+
+set -e
+
+# This sucks, but wrapper_generator alone has to build w/o any tools so we run
+# the wrapper generator with `java` "manually".
+$JAVA_HOME/bin/java -cp $INPUT_ARTIFACTS_DIR/weak/qbt_fringe.wrapper_generator.main/strong/qbt_fringe.wrapper_generator.main/jars/qbt_fringe.wrapper_generator.main-*.jar qbt.fringe.wrapper_generator.Main \
+    $INPUT_ARTIFACTS_DIR/weak/qbt_fringe.wrapper_generator.main/strong $OUTPUT_ARTIFACTS_DIR \
+    wrapper_generator qbt.fringe.wrapper_generator.Main \
+
