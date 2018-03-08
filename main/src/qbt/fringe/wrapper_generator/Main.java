@@ -1,15 +1,16 @@
 package qbt.fringe.wrapper_generator;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.io.Resources;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -27,7 +28,7 @@ public class Main {
         File binDirectory = new File(outputDirectory, "bin");
         libDirectory.mkdirs();
         binDirectory.mkdirs();
-        Map<String, Map<Long, List<String>>> classToCrcToJars = Maps.newHashMap();
+        Map<String, Map<Long, List<String>>> classToCrcToJars = new HashMap<>();
         for(File packageDir : inputDirectory.listFiles()) {
             if(packageDir.getName().startsWith(".")) {
                 continue;
@@ -47,11 +48,11 @@ public class Main {
                                 long crc = ze.getCrc();
                                 Map<Long, List<String>> crcToJars = classToCrcToJars.get(ze.getName());
                                 if(crcToJars == null) {
-                                    classToCrcToJars.put(ze.getName(), crcToJars = Maps.newHashMap());
+                                    classToCrcToJars.put(ze.getName(), crcToJars = new HashMap<>());
                                 }
                                 List<String> jars = crcToJars.get(crc);
                                 if(jars == null) {
-                                    crcToJars.put(crc, jars = Lists.newLinkedList());
+                                    crcToJars.put(crc, jars = new LinkedList<>());
                                 }
                                 jars.add(jarName);
                             }
@@ -71,7 +72,20 @@ public class Main {
                 throw new IllegalArgumentException("Classfile collision at " + e.getKey() + ": " + e.getValue());
             }
         }
-        List<String> template = Resources.asCharSource(Main.class.getResource("wrapper_template.py.txt"), Charsets.UTF_8).readLines();
+        List<String> template = new LinkedList<>();
+        try(InputStream is = Main.class.getResourceAsStream("wrapper_template.py.txt")) {
+            try(InputStreamReader isr = new InputStreamReader(is)) {
+                try(BufferedReader br = new BufferedReader(isr)) {
+                    while(true) {
+                        String line = br.readLine();
+                        if(line == null) {
+                            break;
+                        }
+                        template.add(line);
+                    }
+                }
+            }
+        }
         for(int i = 2; i < args.length; i += 2) {
             String wrapper = args[i];
             String clazz = args[i + 1];
