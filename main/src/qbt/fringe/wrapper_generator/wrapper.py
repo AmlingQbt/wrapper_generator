@@ -13,6 +13,11 @@ release_base=os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
 JAVA_CLASS=None
 with open(release_base + "/mains/" + wrapper_name) as f:
     JAVA_CLASS=f.readline().rstrip('\n')
+env=os.environ.copy()
+with open(release_base + "/env") as f:
+    for line in f.readlines():
+        i=line.index('=')
+        env[line[:i]]=line[i+1:]
 
 java_tmpdir=tempfile.mkdtemp(prefix="wrapper-generator-")
 try:
@@ -30,7 +35,7 @@ try:
         "-classpath",
         javahome + "/lib/tools.jar:" + release_base + "/lib/*",
         JAVA_CLASS] + sys.argv[1:]
-    p = subprocess.Popen(cmd)
+    p = subprocess.Popen(cmd, env=env)
     while(1):
         try:
             p.wait()

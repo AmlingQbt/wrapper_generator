@@ -100,6 +100,20 @@ public class Main {
             writeLines(wrapperFile, wrapper);
             wrapperFile.setExecutable(true);
         }
+        List<String> env = new LinkedList<String>();
+        class Helper {
+            private void add(String wgName, String name) {
+                String val = System.getenv(name);
+                if(val != null) {
+                    env.add(wgName + "=" + val);
+                }
+            }
+        }
+        Helper h = new Helper();
+        h.add("WG_PACKAGE_NAME", "PACKAGE_NAME");
+        h.add("WG_PACKAGE_CUMULATIVE_VERSION", "PACKAGE_CUMULATIVE_VERSION");
+        h.add("WG_VANITY_NAME", "QBT_ENV_VANITY_NAME");
+        writeLines(new File(outputDirectory, "env"), env);
     }
 
     private static void writeLines(File file, Iterable<String> lines) throws IOException {
