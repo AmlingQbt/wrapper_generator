@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -26,8 +27,10 @@ public class Main {
         File outputDirectory = new File(args[1]);
         File libDirectory = new File(outputDirectory, "lib");
         File binDirectory = new File(outputDirectory, "bin");
+        File mainsDirectory = new File(outputDirectory, "mains");
         libDirectory.mkdirs();
         binDirectory.mkdirs();
+        mainsDirectory.mkdirs();
         Map<String, Map<Long, List<String>>> classToCrcToJars = new HashMap<>();
         for(File packageDir : inputDirectory.listFiles()) {
             if(packageDir.getName().startsWith(".")) {
@@ -72,8 +75,8 @@ public class Main {
                 throw new IllegalArgumentException("Classfile collision at " + e.getKey() + ": " + e.getValue());
             }
         }
-        List<String> template = new LinkedList<>();
-        try(InputStream is = Main.class.getResourceAsStream("wrapper_template.py.txt")) {
+        List<String> wrapper = new LinkedList<>();
+        try(InputStream is = Main.class.getResourceAsStream("wrapper.py")) {
             try(InputStreamReader isr = new InputStreamReader(is)) {
                 try(BufferedReader br = new BufferedReader(isr)) {
                     while(true) {
@@ -81,22 +84,31 @@ public class Main {
                         if(line == null) {
                             break;
                         }
-                        template.add(line);
+                        wrapper.add(line);
                     }
                 }
             }
         }
         for(int i = 2; i < args.length; i += 2) {
-            String wrapper = args[i];
+            String name = args[i];
             String clazz = args[i + 1];
-            File wrapperFile = new File(binDirectory, wrapper);
-            try(FileOutputStream fos = new FileOutputStream(wrapperFile);
-                    PrintWriter pw = new PrintWriter(fos)) {
-                for(String line : template) {
-                    pw.println(line.replace("%(clazz)s", clazz));
+
+            File mainFile = new File(mainsDirectory, name);
+            writeLines(mainFile, Collections.singleton(clazz));
+
+            File wrapperFile = new File(binDirectory, name);
+            writeLines(wrapperFile, wrapper);
+            wrapperFile.setExecutable(true);
+        }
+    }
+
+    private static void writeLines(File file, Iterable<String> lines) throws IOException {
+        try(FileOutputStream fos = new FileOutputStream(file)) {
+            try(PrintWriter pw = new PrintWriter(fos)) {
+                for(String line : lines) {
+                    pw.println(line);
                 }
             }
-            wrapperFile.setExecutable(true);
         }
     }
 }

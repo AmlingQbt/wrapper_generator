@@ -8,10 +8,13 @@ import subprocess
 import sys
 import tempfile
 
-JAVA_CLASS="%(clazz)s"
-
+wrapper_name=os.path.basename(sys.argv[0])
 release_base=os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
-java_tmpdir=tempfile.mkdtemp(prefix="wg")
+JAVA_CLASS=None
+with open(release_base + "/mains/" + wrapper_name) as f:
+    JAVA_CLASS=f.readline().rstrip('\n')
+
+java_tmpdir=tempfile.mkdtemp(prefix="wrapper-generator-")
 try:
     javahome=os.getenv("JAVA_HOME")
     if not javahome:
